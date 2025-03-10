@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <title>Web Design Mastery | Contact Us</title>
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <nav>
+      <div class="nav__header">
+        <div class="nav__logo">
+          <a href="#">
+            <img
+              src="../assets/logo-dark.png"
+              alt="logo-dark"
+              class="logo-dark"
+            />
+            <img
+              src="../assets/logo-white.png"
+              alt="logo-white"
+              class="logo-white"
+            />
+          </a>
+        </div>
+        <div class="nav__menu__btn" id="menu-btn">
+          <i class="ri-menu-line"></i>
+        </div>
+      </div>
+      <ul class="nav__links" id="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products">Products</a></li>
+        <li><a href="/about">About Us</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/cart"><i class="ri-shopping-cart-line"></i></a></li>
+
+      </ul>
+    </nav>
+
+    <!-- Contact Us Section -->
+    <section class="section__container contact__container">
+      <h2 class="section__header">CONTACT US</h2>
+      <div class="contact__content">
+        <div class="contact__form">
+          <h3>Get in Touch</h3>
+          <form id="contactForm">
+            <div class="form__group">
+              <input type="text" name="name" placeholder="Your Name" required />
+            </div>
+            <div class="form__group">
+              <input type="email" name="email" placeholder="Your Email" required />
+            </div>
+            <div class="form__group">
+              <textarea
+                name="message"
+                rows="5"
+                placeholder="Your Message"
+                required
+              ></textarea>
+            </div>
+            <button type="submit" class="btn">SEND MESSAGE</button>
+          </form>
+        </div>
+        <div class="contact__info">
+          <h3>Contact Information</h3>
+          <p>
+            Have questions or need assistance? Feel free to reach out to us. We're here to help!
+          </p>
+          <ul class="contact__details">
+            <li>
+              <i class="ri-map-pin-line"></i>
+              <span>123 Main Street, City, Country</span>
+            </li>
+            <li>
+              <i class="ri-phone-line"></i>
+              <span>+1 (123) 456-7890</span>
+            </li>
+            <li>
+              <i class="ri-mail-line"></i>
+              <span>info@webdesignmastery.com</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="section__container footer__container">
+        <div class="footer__col">
+          <h4>Our Information</h4>
+          <ul class="footer__links">
+            <li><a href="#">Return Policy</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms & Condition</a></li>
+            <li><a href="#">Site Map</a></li>
+            <li><a href="#">Store House</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>About Us</h4>
+          <ul class="footer__links">
+            <li><a href="#">Support Center</a></li>
+            <li><a href="#">Customer Support</a></li>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Copy Right</a></li>
+            <li><a href="#">Popular Campaign</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Product</h4>
+          <ul class="footer__links">
+            <li><a href="#">Sports Watches</a></li>
+            <li><a href="#">Cornographic Watches</a></li>
+            <li><a href="#">Digital Watches</a></li>
+            <li><a href="#">Mechanical Watches</a></li>
+            <li><a href="#">Accessories</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Support</h4>
+          <ul class="footer__links">
+            <li><a href="#">Product Help</a></li>
+            <li><a href="#">Service & Warranty</a></li>
+            <li><a href="#">Righting Beats</a></li>
+            <li><a href="#">Authorizes Service</a></li>
+            <li><a href="#">Customer Care</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bar">
+        Copyright © 2024 Web Design Mastery. All rights reserved.
+      </div>
+    </footer>
+
+    <script>
+      document.querySelector("#contactForm").addEventListener("submit", async (event) => {
+          event.preventDefault();
+      
+          const name = document.querySelector('input[name="name"]').value;
+          const email = document.querySelector('input[name="email"]').value;
+          const message = document.querySelector('textarea[name="message"]').value;
+      
+          try {
+              const response = await fetch("http://localhost:3000/contact", {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({ name, email, message })
+              });
+      
+              const result = await response.json();
+              if (result.success) {
+                  alert("Email sent successfully!");
+                  document.querySelector("#contactForm").reset();
+              } else {
+                  alert("Failed to send email. Please try again.");
+              }
+          } catch (error) {
+              console.error("Error:", error);
+              alert("An error occurred. Please try again later.");
+          }
+      });
+      </script>
+      
+  </body>
+</html>

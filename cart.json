@@ -1,0 +1,23 @@
+[
+  {
+    "id": "2",
+    "name": "KERAKATCHI",
+    "price": "950",
+    "image": "http://localhost:3000/assets/arrival-2.png",
+    "quantity": 3
+  },
+  {
+    "id": "3",
+    "name": "CITIZEN",
+    "price": "678",
+    "image": "http://localhost:5050/assets/arrival-3.png",
+    "quantity": 1
+  },
+  {
+    "id": "4",
+    "name": "TERJAN GOLD",
+    "price": "890",
+    "image": "http://localhost:3000/assets/arrival-4.png",
+    "quantity": 1
+  }
+]

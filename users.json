@@ -1,0 +1,44 @@
+[
+  {
+    "firstname": "Deepinder",
+    "lastname": "Singh",
+    "email": "deep@gmail.com",
+    "password": "12345678"
+  },
+  {
+    "firstname": "Deep",
+    "lastname": "Inder",
+    "email": "de@gmail.com",
+    "password": "87654321"
+  },
+  {
+    "firstname": "Deep",
+    "lastname": "Singh",
+    "email": "d@gmail.com",
+    "password": "12345678"
+  },
+  {
+    "firstname": "dede",
+    "lastname": "eve",
+    "email": "dep@gmail.com",
+    "password": "12345678"
+  },
+  {
+    "firstname": "h",
+    "lastname": "r",
+    "email": "mofoce8130@oziere.com",
+    "password": "123456789"
+  },
+  {
+    "firstname": "Deepinder",
+    "lastname": "Pal",
+    "email": "deep15@gmail.com",
+    "password": "123456789"
+  },
+  {
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "john@example.com",
+    "password": "password123"
+  }
+]
