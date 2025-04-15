@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile</title>
+  <link rel="stylesheet" href="/css/profile.css" />
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-image">
+      <img src="/assets/login2.webp" alt="Login Image" />
+    </div>
+
+    <div class="login-form">
+      <h2>Profile</h2>
+      <form id="loginForm">
+        <div class="input-group">
+          <input type="text" id="name" name="email" value="<%= name %>" />
+        </div>
+        <div class="input-group">
+          <input type="email" id="email" name="email" value="<%= email %>" />
+        </div>
+
+        <div class="input-group">
+          <input type="password" id="password" placeholder="New Password" />
+        </div>
+
+        <button id="edit-btn" class="login-btn">Update Profile</button>
+
+      </form>
+    </div>
+  </div>
+
+<script src="/js/profile.js"></script>
+</body>
+</html>

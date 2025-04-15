@@ -1,23 +1,34 @@
 [
   {
-    "id": "2",
-    "name": "KERAKATCHI",
-    "price": "950",
-    "image": "http://localhost:3000/assets/arrival-2.png",
-    "quantity": 3
-  },
-  {
-    "id": "3",
-    "name": "CITIZEN",
-    "price": "678",
-    "image": "http://localhost:5050/assets/arrival-3.png",
+    "user_email": "bhbhb@bhb.com",
+    "id": "6",
+    "name": "TITAN BLACK",
+    "image": "assets/arrival-9.jpg",
+    "price": 678,
     "quantity": 1
   },
   {
-    "id": "4",
-    "name": "TERJAN GOLD",
-    "price": "890",
-    "image": "http://localhost:3000/assets/arrival-4.png",
+    "user_email": "deep@gmail.com",
+    "id": "1",
+    "name": "ADERTICA",
+    "image": "assets/arrival-1.png",
+    "price": 9000,
+    "quantity": 1
+  },
+  {
+    "user_email": "de@gmail.com",
+    "id": "2",
+    "name": "KERAKATCHI",
+    "image": "assets/arrival-2.png",
+    "price": 950,
+    "quantity": 1
+  },
+  {
+    "user_email": "de@gmail.com",
+    "id": "3",
+    "name": "CITIZEN",
+    "image": "assets/arrival-3.png",
+    "price": 678,
     "quantity": 1
   }
 ]

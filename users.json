@@ -1,44 +1,26 @@
 [
   {
-    "firstname": "Deepinder",
-    "lastname": "Singh",
+    "id": 1,
+    "name": "Bhavishya Garg",
+    "email": "gotojok441@clubemp.com",
+    "password": "$2b$10$IpwqbhyG.jAu7OKEdZ/u9OCmAxpRxn6Db8lHN5REYT3gSnLQUXPTa"
+  },
+  {
+    "id": 2,
+    "name": "Bhavishya Garg",
+    "email": "bhbhb@bhb.com",
+    "password": "$2b$10$vO1V/2ubAlK4DxXU2TVOJ.Sf8SR3O.3pN4Lu6OanPflchqdqX/K1a"
+  },
+  {
+    "id": 3,
+    "name": "Deepinder Singh",
     "email": "deep@gmail.com",
-    "password": "12345678"
+    "password": "$2b$10$b8II2WEfiooYGfuXKy.Tnuxrg44FJ3xoz2VK8vijOUughGRds0sY6"
   },
   {
-    "firstname": "Deep",
-    "lastname": "Inder",
+    "id": 4,
+    "name": "Deep Inder",
     "email": "de@gmail.com",
-    "password": "87654321"
-  },
-  {
-    "firstname": "Deep",
-    "lastname": "Singh",
-    "email": "d@gmail.com",
-    "password": "12345678"
-  },
-  {
-    "firstname": "dede",
-    "lastname": "eve",
-    "email": "dep@gmail.com",
-    "password": "12345678"
-  },
-  {
-    "firstname": "h",
-    "lastname": "r",
-    "email": "mofoce8130@oziere.com",
-    "password": "123456789"
-  },
-  {
-    "firstname": "Deepinder",
-    "lastname": "Pal",
-    "email": "deep15@gmail.com",
-    "password": "123456789"
-  },
-  {
-    "firstname": "John",
-    "lastname": "Doe",
-    "email": "john@example.com",
-    "password": "password123"
+    "password": "$2b$10$onw2NTmoH.Hhot9lG0VoMO7GQu0ZSasdVrE3lDS3jMg6LRTr.Fuvu"
   }
 ]

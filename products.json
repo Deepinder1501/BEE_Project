@@ -2,7 +2,7 @@
   {
     "id": 1,
     "name": "ADERTICA",
-    "price": 780,
+    "price": 9000,
     "image": "assets/arrival-1.png"
   },
   {
@@ -48,17 +48,9 @@
     "image": "assets/arrival-10.jpg"
   },
   {
-    "name": "Bhavishya",
-    "price": 100000000,
+    "name": "Rolex",
+    "price": 1000,
     "image": "assets/arrival-10.jpg",
     "id": 9
-  },
-  {
-    "name": "New Watch",
-    "description": "A stylish watch",
-    "price": 199.99,
-    "quantity": 10,
-    "image": "watch.jpg",
-    "id": 10
   }
 ]

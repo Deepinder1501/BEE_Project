@@ -13,6 +13,9 @@
   margin: 0;
   box-sizing: border-box;
 }
+#heading{
+  color: gold ;
+}
 
 .section__container {
   max-width: var(--max-width);
@@ -123,7 +126,7 @@ nav {
   position: absolute;
   top: 65px;
   left: 0;
-  width: 100%;
+  width: 50%;
   padding: 1rem;
   display: flex;
   align-items: center;
