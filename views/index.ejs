@@ -32,10 +32,10 @@
         <li><a href="/cart"><i class="ri-shopping-cart-line"></i>Cart</a></li>
         <li><a href="/login"><i class="ri-logout-box-line"></i></a></li>
 
-        <% if (user) { %> <!-- If the user is logged in -->
+        <% if (user) { %> 
           <li><a href="/login"><i class="ri-logout-box-line"></i>Logout</a></li>
           <li><p>Welcome, <%= user.name %>!</p></li>
-        <% } else { %> <!-- If the user is a guest -->
+        <% } else { %> 
           <li><a href="/login">Login</a></li>
           <li><a href="/signup">Signup</a></li>
         <% } %>

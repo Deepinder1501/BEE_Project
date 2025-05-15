@@ -29,6 +29,11 @@ body::before {
 }
 
 /* Signup Container */
+.error-message {
+  color: red;
+  font-size: 0.9em;
+}
+
 .signup-container {
     display: flex;
     width: 90%;

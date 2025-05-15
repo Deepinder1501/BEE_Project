@@ -1,9 +1,17 @@
-document.querySelector("#contactForm").addEventListener("submit", async (event) => {
+document.addEventListener("DOMContentLoaded", () => {
+  const contactForm = document.querySelector("#contactForm");
+
+  contactForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const name = document.querySelector('input[name="name"]').value;
-    const email = document.querySelector('input[name="email"]').value;
-    const message = document.querySelector('textarea[name="message"]').value;
+    const name = contactForm.querySelector('input[name="name"]').value.trim();
+    const email = contactForm.querySelector('input[name="email"]').value.trim();
+    const message = contactForm.querySelector('textarea[name="message"]').value.trim();
+
+    if (!name || !email || !message) {
+      alert("Please fill in all fields.");
+      return;
+    }
 
     try {
       const response = await fetch("/contact", {
@@ -15,14 +23,16 @@ document.querySelector("#contactForm").addEventListener("submit", async (event) 
       });
 
       const result = await response.json();
-      if (result.success) {
-        alert("Email sent successfully!");
-        document.querySelector("#contactForm").reset();
+
+      if (response.ok && result.success) {
+        alert("Your message has been sent successfully!");
+        contactForm.reset();
       } else {
-        alert("Failed to send email. Please try again.");
+        alert(result.error || "Failed to send your message. Please try again.");
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again later.");
+      console.error("Error submitting contact form:", error);
+      alert("An unexpected error occurred. Please try again later.");
     }
   });
+});

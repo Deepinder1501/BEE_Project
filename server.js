@@ -1,20 +1,33 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const fs = require("fs");
 const path = require("path");
 const nodemailer = require("nodemailer");
 const session = require("express-session");
 require("dotenv").config();
 const bcrypt = require("bcrypt");
-const { name } = require("ejs");
+const app = express();
 
+app.use(express.json());
+
+
+const mongoose = require("mongoose");
+mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/watchstore", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log(" MongoDB connected...."))
+.catch((err) => console.error(" MongoDB connection error:", err));
+
+const User = require("./models/User");
+const Product = require("./models/Product");
+const CartItem = require("./models/CartItem");
+
+
+const PORT = process.env.PORT || 3000;
 const saltRounds = 10;
 
-const app = express();
-const PORT = 3000;
-
 app.use((req, res, next) => {
-  res.setHeader("Content-Security-Policy", 
+  res.setHeader("Content-Security-Policy",
     "default-src 'self'; " +
     "script-src 'self'; " +
     "style-src 'self' https://fonts.googleapis.com; " +
@@ -25,52 +38,46 @@ app.use((req, res, next) => {
   next();
 });
 
-
-const USERS_FILE = path.join(__dirname, "users.json");
-const PRODUCTS_FILE = path.join(__dirname, "products.json");
-const cartFilePath = path.join(__dirname, "cart.json");
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static("public"));
-
+app.use(express.static('public'));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-
 app.use(
   session({
-    secret: "secretKey",//session cookie 
-    resave: false,//dont save if unmodified
-    saveUninitialized: true,//session cookie created even if nothing is set
+    secret: process.env.SESSION_SECRET || "secretKey",
+    resave: false,
+    saveUninitialized: true,
   })
 );
 
+function isAuthenticated(req, res, next) {
+  if (req.session && req.session.user) return next();
+  if (req.headers.accept && req.headers.accept.includes("application/json")) {
+    return res.status(401).json({ message: "Please log in first" });
+  }
+  res.redirect("/login");
+}
 
-
-// Home route
-app.get("/", (req, res) => {
-  const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
-  const featuredProducts = products.slice(0, 4);
-  const arrivals = products.filter((product) => product.new);
-
-  const testimonials = [   
-    { quote: "Amazing watches and super fast delivery!", name: "Alice Smith", title: "Customer" },
-    { quote: "Quality is top-notch. Will order again!", name: "Bob Johnson", title: "Verified Buyer" },
-    { quote: "Beautiful designs. Excellent service.", name: "Carol Davis", title: "Happy Customer" }
-  ];
-  res.render("index", {
-    title: "Home",
-    featuredProducts,
-    arrivals,
-    testimonials,
-    user: req.session.user || null
-  });
+app.get("/", async (req, res) => {
+  try {
+    const products = await Product.find();
+    const featuredProducts = products.slice(0, 4);
+    const arrivals = products.filter(p => p.new);
+    const testimonials = [
+      { quote: "Amazing watches and super fast delivery!", name: "Alice Smith", title: "Customer" },
+      { quote: "Quality is top-notch. Will order again!", name: "Bob Johnson", title: "Verified Buyer" },
+      { quote: "Beautiful designs. Excellent service.", name: "Carol Davis", title: "Happy Customer" }
+    ];
+    res.render("index", { title: "Home", featuredProducts, arrivals, testimonials, user: req.session.user || null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
 });
-
-// Auth routes
+//signup
 app.get("/signup", (req, res) => res.render("signup"));
-
 app.post("/signup", async (req, res) => {
   const { firstname, lastname, email, password, confirmPassword } = req.body;
 
@@ -82,307 +89,239 @@ app.post("/signup", async (req, res) => {
     return res.status(400).json({ message: "Passwords do not match." });
   }
 
-  const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
-  if (users.find(user => user.email === email)) {
-    return res.status(400).json({ message: "User already exists." });
+  if (password.length < 8) {
+    return res.status(400).json({ message: "Password must be at least 8 characters long." });
+  }
+
+  if (await User.findOne({ email: new RegExp('^' + email + '$', 'i') })) {
+    return res.status(409).json({ message: "User already exists." });
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const userId = users.length + 1; 
-    const newUser = {
-      id: userId,
-      name: `${firstname} ${lastname}`,
-      email,
-      password: hashedPassword,
-    };
+    const hashed = await bcrypt.hash(password, saltRounds);
 
-    users.push(newUser);
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    const user = new User({ firstname, lastname, email, password: hashed });
+    await user.save();
 
-    res.status(200).json({ message: "Signup successful!", redirect: "/login" });
+    res.status(201).json({ message: "Signup successful!", redirect: "/login" });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Server error. Please try again." });
   }
 });
 
+//login
 app.get("/login", (req, res) => res.render("login"));
 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
   try {
-    const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
-    const user = users.find(user => user.email === email);
-
-    if (!user) {
+    const user = await User.findOne({ email });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ message: "Invalid email or password." });
-    }
+    req.session.user = {
+      _id: user._id,
+      name: user.name || `${user.firstname} ${user.lastname}`,
+      email: user.email
+    };
 
-    req.session.user = user;
-    return res.status(200).json({ message: "Login successful!", redirect: "/" });
-
-  } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({ message: "Something went wrong on the server." });
-  }
-});
-
-
-
-// Product routes
-app.get("/products", (req, res) => {
-  fs.readFile(PRODUCTS_FILE, "utf-8", (err, data) => {
-    if (err) {
-      console.error("Error reading products.json:", err);
-      return res.status(500).send("Error loading products");
-    }
-    const products = JSON.parse(data);
-    res.render("products", { products });
-  });
-});
-
-
-// Middleware to check if user is authenticated
-function isAuthenticated(req, res, next) {
-  if (req.session && req.session.user) {
-    return next();
-  } else {
-    if (req.headers.accept && req.headers.accept.includes("application/json")) {
-      return res.status(401).json({ message: "Please log in first" });
-    } else {
-      return res.redirect("/login");
-    }
-  }
-}
-app.get("/cart", isAuthenticated, (req, res) => {
-  const cart = JSON.parse(fs.readFileSync(cartFilePath, "utf-8"));
-  res.render("cart", { cart, user: req.session.user });
-});
-
-// --- Render Cart Page ---
-app.get('/profile', isAuthenticated, (req, res) => {
-
-  const user = req.session.user; // Access user from session
-  console.log(user)
-  res.render('profile', { 
-    name: user.name,
-    email: user.email,
-   }); // Pass user data to profile 
-});
-
-app.post('/edit-profile', (req, res) => {
-  const { name, email, password } = req.body;
-
-  if (!name || !email) {
-    return res.status(400).json({ message: 'Name and email are required.' });
-  }
-
-  try {
-    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
-    const userIndex = users.findIndex((user) => user.email === email);
-
-    if (userIndex === -1) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-
-    // Update user details
-    users[userIndex].name = name;
-    if (password) {
-      const hashedPassword = bcrypt.hashSync(password, 10); // Hash the new password
-      users[userIndex].password = hashedPassword;
-    }
-
-    // Save the updated users array back to the file
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-
-    res.status(200).json({ message: 'Profile updated successfully!' });
+    res.json({ message: "Login successful!", redirect: "/" });
   } catch (err) {
-    console.error('Error updating profile:', err);
-    res.status(500).json({ message: 'Server error. Please try again.' });
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error. Please try again." });
   }
 });
 
 
-// --- Add to Cart ---
-app.post("/api/add-to-cart", isAuthenticated, (req, res) => {
+// Products
+app.get("/products", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.render("products", { products });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading products");
+  }
+});
+
+// Cart
+app.get("/cart", isAuthenticated, async (req, res) => {
+  const items = await CartItem.find({ userId: req.session.user._id });
+  res.render("cart", { cart: items, user: req.session.user });
+});
+app.get("/cart-items", isAuthenticated, async (req, res) => {
+  const items = await CartItem.find({ userId: req.session.user._id });
+  res.json(items);
+});
+app.post("/api/add-to-cart", isAuthenticated, async (req, res) => {
   const { id, name, image, price, quantity } = req.body;
-  const {email} = req.session.user
-  fs.readFile(cartFilePath, "utf-8", (err, data) => {
-    if (err) return res.status(500).send("Error reading cart");
+  const email = req.session.user.email;
+  const userId = req.session.user._id; 
 
-    let cart = [];
-    try {
-      cart = JSON.parse(data);
-    } catch (parseErr) {
-      console.error("Parse error:", parseErr);
-    }
+  if (!userId) return res.status(400).json({ message: "User ID missing in session" });
 
-    const existingItem = cart.find(item => item.id === id);
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      cart.push({ user_email:email,id, name, image, price, quantity });
-    }
+  let item = await CartItem.findOne({ userId, productId: id });
 
-    fs.writeFile(cartFilePath, JSON.stringify(cart, null, 2), (err) => {
-      if (err) return res.status(500).send("Error writing to cart");
-      res.json({ success: true, message: "Item added to cart" });
+  if (item) {
+    item.quantity += quantity;
+    await item.save();
+  } else {
+    item = new CartItem({
+      userId,
+      userEmail: email,
+      productId: id,
+      name,
+      image,
+      price,
+      quantity
     });
-  });
+    await item.save();
+  }
+
+  res.json({ success: true, message: "Item added to cart" });
 });
 
-// Get Cart Items
-app.get("/cart-items", isAuthenticated, (req, res) => {
-  const userEmail = req.session.user.email; // Get the logged-in user's email
-  console.log(userEmail)
-    const cart = JSON.parse(fs.readFileSync(cartFilePath, "utf-8") || "[]");
-    // Filter cart items for the logged-in user
-    const userCart = cart.filter(item => item.user_email === userEmail);
-    res.json(userCart)
-});
-
-// Update Cart Quantity
-app.post("/update-cart", isAuthenticated, (req, res) => {
+app.post("/update-cart", isAuthenticated, async (req, res) => {
   const { id, action } = req.body;
-  let cart = JSON.parse(fs.readFileSync(cartFilePath, "utf-8"));
+  const item = await CartItem.findById(id);
+  if (!item) return res.status(404).json({ message: "Item not found" });
 
-  cart = cart.map((item) => {
-    if (item.id === id) {
-      if (action === "increase") item.quantity += 1;
-      if (action === "decrease" && item.quantity > 1) item.quantity -= 1;
-    }
-    return item;
-  });
+  if (action === 'increase') item.quantity++;
+  if (action === 'decrease' && item.quantity > 1) item.quantity--;
 
-  fs.writeFileSync(cartFilePath, JSON.stringify(cart, null, 2));
+  await item.save();
   res.json({ message: "Cart updated" });
 });
-
-// Remove from Cart
-app.post("/remove-from-cart", isAuthenticated, (req, res) => {
-  const { id } = req.body;
-
-  let cart = JSON.parse(fs.readFileSync(cartFilePath, "utf-8"));
-  cart = cart.filter((item) => item.id !== id);
-
-  fs.writeFile(cartFilePath, JSON.stringify(cart, null, 2), (err) => {
-    if (err) {
-      console.error("Error writing cart:", err);
-      return res.status(500).json({ success: false, message: "Failed to remove item" });
-    }
-    res.json({ success: true, message: "Item removed successfully" });
-  });
+app.post("/remove-from-cart", isAuthenticated, async (req, res) => {
+  await CartItem.findByIdAndDelete(req.body.id);
+  res.json({ success: true, message: "Item removed successfully" });
 });
 
-// Contact Form
-app.get("/contact", (req, res) => {
-  res.render("contact");
+// Profile
+app.get("/profile", isAuthenticated, (req, res) => {
+  res.render("profile", { name: req.session.user.name, email: req.session.user.email });
+});
+app.post("/edit-profile", isAuthenticated, async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email)
+    return res.status(400).json({ message: "Name and email are required." });
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found." });
+  user.name = name;
+  if (password) user.password = await bcrypt.hash(password, saltRounds);
+  await user.save();
+  res.json({ message: "Profile updated successfully!" });
 });
 
-app.post("/contact", (req, res) => {
+// Contact
+app.get("/contact", (req, res) => res.render("contact"));
+app.post("/contact", async (req, res) => {
   const { name, email, message } = req.body;
-
   const transporter = nodemailer.createTransport({
     service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    }
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
   });
-
-  const mailOptions = {
-    from: email,
-    to: process.env.EMAIL_USER,
-    subject: "Contact Form Message",
-    text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error("Email Error:", error);
-      return res.json({ success: false });
-    }
+  try {
+    await transporter.sendMail({ from: email, to: process.env.EMAIL_USER, subject: "Contact Form Message", text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}` });
     res.json({ success: true });
-  });
+  } catch (err) {
+    console.error("Email Error:", err);
+    res.json({ success: false });
+  }
 });
 
-// About page
-app.get("/about", (req, res) => {
-  res.render("about");
-});
+// About
+app.get("/about", (req, res) => res.render("about"));
 
-// Admin Panel API routes
-app.get("/admin/users", (req, res) => {
-  const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
+// Admin
+app.get("/admin/users", async (req, res) => {
+  const users = await User.find();
   res.json(users);
 });
-
-app.post("/admin/users/delete", (req, res) => {
-  const { email } = req.body;
-  let users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
-  users = users.filter(user => user.email !== email);
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-  
+app.post("/admin/users/delete", async (req, res) => {
+  await User.deleteOne({ _id: req.body.id });
   res.json({ success: true });
 });
-
-app.get("/admin/products", (req, res) => {
-  const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
+app.get("/admin/products", async (req, res) => {
+  const products = await Product.find();
   res.json(products);
 });
+app.post("/admin/products/edit", async (req, res) => {
+  try {
+    const { id, field, value } = req.body;
 
-app.post("/admin/products/edit", (req, res) => {
-  const { index, field, value } = req.body;
-  const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
-  if (products[index]) {
-    products[index][field] = field === 'price' ? parseFloat(value) : value;
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2));
+    if (!id || !field) {
+      return res.status(400).send("Missing required fields.");
+    }
+
+    let updateValue;
+    if (field === 'price') {
+      const parsedPrice = parseFloat(value);
+      if (isNaN(parsedPrice)) {
+        return res.status(400).send("Invalid price value.");
+      }
+      updateValue = parsedPrice;
+    } else {
+      updateValue = value;
+    }
+
+    const update = { [field]: updateValue };
+    await Product.findByIdAndUpdate(id, update);
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Error updating product:", err);
+    res.status(500).send("Server error.");
   }
-  res.sendStatus(200);
 });
 
-app.post("/admin/products/add", (req, res) => {
-  const { name, price, description } = req.body;
-  const product = { name, price: parseFloat(price), description };
-  const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
-  products.push(product);
-  fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2));
-  res.sendStatus(201);
+// Add new product
+app.post("/admin/products/add", async (req, res) => {
+  try {
+    const { name, price, description } = req.body;
+
+    const parsedPrice = parseFloat(price);
+    if (!name || isNaN(parsedPrice) || !description) {
+      return res.status(400).send("Invalid product details.");
+    }
+
+    const product = new Product({ name, price: parsedPrice, description });
+    await product.save();
+
+    res.sendStatus(201);
+  } catch (err) {
+    console.error("Error adding product:", err);
+    res.status(500).send("Server error.");
+  }
 });
 
-// Admin: Delete Product Route
-app.post('/admin/products/delete', (req, res) => {
-  const { name } = req.body;
-
-  let products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf-8'));
-
-  products = products.filter(product => product.name !== name);
-
-  fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2));
-
-  res.json({ success: true });
+// Delete product
+app.post("/admin/products/delete", async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) return res.status(400).send("Product ID required.");
+    
+    await Product.deleteOne({ _id: id });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error deleting product:", err);
+    res.status(500).send("Server error.");
+  }
 });
 
-
-// Admin Panel View
-app.get('/admin', (req, res) => {
-  const usersPath = path.join(__dirname, 'users.json');
-  const productsPath = path.join(__dirname, 'products.json');
-
-  const users = JSON.parse(fs.readFileSync(usersPath, 'utf-8'));
-  const products = JSON.parse(fs.readFileSync(productsPath, 'utf-8'));
-
-  res.render('admin', { users, products });
+// admin panel
+app.get("/admin", async (req, res) => {
+  try {
+    const users = await User.find();
+    const products = await Product.find();
+    res.render("admin", { users, products });
+  } catch (err) {
+    console.error("Error loading admin page:", err);
+    res.status(500).send("Server error.");
+  }
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

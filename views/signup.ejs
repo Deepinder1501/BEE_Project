@@ -14,30 +14,36 @@
 
     <div class="signup-form">
       <h2>Create an Account</h2>
-      <form id="signupForm">
+     <form id="signupForm" method="POST">
+
         <div class="input-group">
-          <input type="text" id="firstname" name="firstname" required>
+          <input type="text" id="firstname" name="firstname" >
           <label for="firstname">First Name</label>
+          <span class="error-message" id="firstnameError"></span>
         </div>
 
         <div class="input-group">
-          <input type="text" id="lastname" name="lastname" required>
+          <input type="text" id="lastname" name="lastname" >
           <label for="lastname">Last Name</label>
+          <span class="error-message" id="lastnameError"></span>
         </div>
 
         <div class="input-group">
           <input type="email" id="email" name="email" required>
           <label for="email">Email</label>
+          <span class="error-message" id="emailError"></span>
         </div>
 
         <div class="input-group">
           <input type="password" id="password" name="password" required>
           <label for="password">Password</label>
+          <span class="error-message" id="passwordError"></span>
         </div>
 
         <div class="input-group">
           <input type="password" id="confirmPassword" name="confirmPassword" required>
           <label for="confirmPassword">Confirm Password</label>
+          <span class="error-message" id="confirmPasswordError"></span>
         </div>
 
         <button type="submit" class="signup-btn">Sign Up</button>
@@ -46,8 +52,6 @@
       </form>
     </div>
   </div>
-
-
 
 <script src="/js/signup.js"></script>
 </body>

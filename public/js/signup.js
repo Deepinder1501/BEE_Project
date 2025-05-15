@@ -10,6 +10,12 @@ form.addEventListener('submit', async (e) => {
   const password = form.password.value.trim();
   const confirmPassword = form.confirmPassword.value.trim();
 
+  // Basic validation
+  if (!firstname || !lastname || !email || !password || !confirmPassword) {
+    message.textContent = "All fields are required.";
+    return;
+  }
+
   const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
   if (!emailPattern.test(email)) {
     message.textContent = "Please enter a valid email.";
@@ -26,25 +32,25 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  const formData = { firstname, lastname, email, password, confirmPassword };
+  const userData = { firstname, lastname, email, password, confirmPassword };
 
   try {
     const res = await fetch("/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(userData),
     });
 
     const data = await res.json();
     message.textContent = data.message;
-    
+
     if (res.ok && data.redirect) {
-      
       setTimeout(() => {
         window.location.href = data.redirect;
       }, 1000);
     }
   } catch (err) {
+    console.error("Signup error:", err);
     message.textContent = "Something went wrong. Please try again.";
   }
 });
